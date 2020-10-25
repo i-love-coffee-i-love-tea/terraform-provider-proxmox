@@ -151,7 +151,7 @@ func resourceVmQemu() *schema.Resource {
 				Optional: true,
 				Default:  "",
 			},
-			"vga": &schema.Schema{
+			/*"vga": &schema.Schema{
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -167,7 +167,12 @@ func resourceVmQemu() *schema.Resource {
 						},
 					},
 				},
-			},
+			},*/
+                        "vga": {
+                                Type:     schema.TypeString,
+                                Optional: true,
+                                Default: "std",
+                        },
 			"network": &schema.Schema{
 				Type:          schema.TypeSet,
 				Optional:      true,
@@ -511,8 +516,8 @@ func resourceVmQemuCreate(d *schema.ResourceData, meta interface{}) error {
 	pmParallelBegin(pconf)
 	client := pconf.Client
 	vmName := d.Get("name").(string)
-	vga := d.Get("vga").(*schema.Set)
-	qemuVgaList := vga.List()
+	/*vga := d.Get("vga").(*schema.Set)
+	qemuVgaList := vga.List()*/
 	networks := d.Get("network").(*schema.Set)
 	qemuNetworks := DevicesSetToMap(networks)
 	disks := d.Get("disk").(*schema.Set)
@@ -533,7 +538,7 @@ func resourceVmQemuCreate(d *schema.ResourceData, meta interface{}) error {
 		Balloon:      d.Get("balloon").(int),
 		QemuCores:    d.Get("cores").(int),
 		QemuSockets:  d.Get("sockets").(int),
-		QemuVcpus:    d.Get("vcpus").(int),
+		//QemuVcpus:    d.Get("vcpus").(int),
 		QemuCpu:      d.Get("cpu").(string),
 		QemuNuma:     d.Get("numa").(bool),
 		QemuKVM:      d.Get("kvm").(bool),
@@ -562,10 +567,11 @@ func resourceVmQemuCreate(d *schema.ResourceData, meta interface{}) error {
 		QemuBrige:    d.Get("bridge").(string),
 		QemuVlanTag:  d.Get("vlan").(int),
 		QemuMacAddr:  d.Get("mac").(string),
+                QemuVga:      d.Get("vga").(string),
 	}
-	if len(qemuVgaList) > 0 {
+	/*if len(qemuVgaList) > 0 {
 		config.QemuVga = qemuVgaList[0].(map[string]interface{})
-	}
+	}*/
 	log.Print("[DEBUG] checking for duplicate name")
 	dupVmr, _ := client.GetVmRefByName(vmName)
 
@@ -714,8 +720,8 @@ func resourceVmQemuUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 	configDisksSet := d.Get("disk").(*schema.Set)
 	qemuDisks := DevicesSetToMap(configDisksSet)
-	vga := d.Get("vga").(*schema.Set)
-	qemuVgaList := vga.List()
+	/*vga := d.Get("vga").(*schema.Set)
+	qemuVgaList := vga.List()*/
 	configNetworksSet := d.Get("network").(*schema.Set)
 	qemuNetworks := DevicesSetToMap(configNetworksSet)
 	serials := d.Get("serial").(*schema.Set)
@@ -746,7 +752,7 @@ func resourceVmQemuUpdate(d *schema.ResourceData, meta interface{}) error {
 		Balloon:      d.Get("balloon").(int),
 		QemuCores:    d.Get("cores").(int),
 		QemuSockets:  d.Get("sockets").(int),
-		QemuVcpus:    d.Get("vcpus").(int),
+		//QemuVcpus:    d.Get("vcpus").(int),
 		QemuCpu:      d.Get("cpu").(string),
 		QemuNuma:     d.Get("numa").(bool),
 		QemuKVM:      d.Get("kvm").(bool),
@@ -775,10 +781,11 @@ func resourceVmQemuUpdate(d *schema.ResourceData, meta interface{}) error {
 		QemuBrige:    d.Get("bridge").(string),
 		QemuVlanTag:  d.Get("vlan").(int),
 		QemuMacAddr:  d.Get("mac").(string),
+		QemuVga:      d.Get("vga").(string),
 	}
-	if len(qemuVgaList) > 0 {
+	/*if len(qemuVgaList) > 0 {
 		config.QemuVga = qemuVgaList[0].(map[string]interface{})
-	}
+	}*/
 
 	err = config.UpdateConfig(vmr, client)
 	if err != nil {
@@ -865,7 +872,7 @@ func resourceVmQemuRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("balloon", config.Balloon)
 	d.Set("cores", config.QemuCores)
 	d.Set("sockets", config.QemuSockets)
-	d.Set("vcpus", config.QemuVcpus)
+	//d.Set("vcpus", config.QemuVcpus)
 	d.Set("cpu", config.QemuCpu)
 	d.Set("numa", config.QemuNuma)
 	d.Set("kvm", config.QemuKVM)
@@ -888,10 +895,11 @@ func resourceVmQemuRead(d *schema.ResourceData, meta interface{}) error {
 	activeDisksSet := UpdateDevicesSet(configDisksSet, config.QemuDisks)
 	d.Set("disk", activeDisksSet)
 	// Display.
-	activeVgaSet := d.Get("vga").(*schema.Set)
+	/*activeVgaSet := d.Get("vga").(*schema.Set)
 	if len(activeVgaSet.List()) > 0 {
 		d.Set("features", UpdateDeviceConfDefaults(config.QemuVga, activeVgaSet))
-	}
+	}*/
+        d.Set("vga", config.QemuVga)
 	// Networks.
 	configNetworksSet := d.Get("network").(*schema.Set)
 	activeNetworksSet := UpdateDevicesSet(configNetworksSet, config.QemuNetworks)
